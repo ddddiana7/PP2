@@ -1,3 +1,3 @@
 import os
-if os.path.exists('example2.txt'):
-    os.remove('example2.txt')
+if os.path.exists('3.txt'):
+    os.remove('3.txt')
