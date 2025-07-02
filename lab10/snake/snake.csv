@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS "User" (
+        user_id SERIAL PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS user_score (
+        score_id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES "User"(user_id),
+        level INT NOT NULL,
+        score INT NOT NULL,
+        saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
