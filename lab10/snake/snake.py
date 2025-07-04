@@ -4,17 +4,17 @@ import time
 import psycopg2
 from pygame.locals import *
 
-# Initialize Pygame
+#иницилизируем
 pygame.init()
 pygame.font.init()
 
 # Database connection
 def create_connection():
     try:
-        conn = psycopg2.connect(
+        conn = psycopg2.connect( #подключаюсь к базе
             database="snakedb",  
-            user="postgres", 
-            password="Aidosmaidos",  
+            user="dyanne", 
+            password="1234567",  
             host="localhost", 
             port="5432")
         return conn
@@ -22,9 +22,11 @@ def create_connection():
         print(f"Database connection failed: {e}")
         return None
 
+#таблица чтобы сохранить данные о юзере
 def create_tables(conn):
     cur = conn.cursor()
     cur.execute("""
+                #хранит user_id, username, created_at
     CREATE TABLE IF NOT EXISTS "User" (
         user_id SERIAL PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
@@ -72,13 +74,13 @@ def save_score(conn, user_id, level, score):
     """, (user_id, level, score))
     conn.commit()
 
-# Game settings
+#главные настройки
 WIDTH, HEIGHT, BLOCK = 700, 700, 50
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake Game")
 clock = pygame.time.Clock()
 
-# Colors
+#ЦВЕТА
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 DARK_GREEN = (0, 200, 100)
@@ -91,10 +93,10 @@ GRAY = (100, 100, 100)
 GRID_COLOR = (40, 40, 40)
 WALL_COLOR = (150, 150, 150)
 
-# Font
+#шрифт
 all_font = pygame.font.SysFont("Verdana", 30)
 
-# Draw grid lines
+#функция рисуем линии
 def draw_grid(screen, width, height, block):
     for i in range(0, width + block, block):
         pygame.draw.line(screen, GRID_COLOR, (i, 0), (i, height), 1)
@@ -128,20 +130,20 @@ class Snake:
             self.next_direction = (dx, dy)
 
     def move(self):
-        # Обновляем направление только если змейка двигалась
+        #обновляю направление только если змейка двигалась
         if self.direction != (0, 0) or self.next_direction != (0, 0):
             self.direction = self.next_direction
             
-        # Если нет направления - не двигаемся
+        #если нет направления, не двигаемся
         if self.direction == (0, 0):
             return
             
-        # Move body parts
+        #движения тела
         for idx in range(len(self.snakebody) - 1, 0, -1):
             self.snakebody[idx].x = self.snakebody[idx - 1].x
             self.snakebody[idx].y = self.snakebody[idx - 1].y
             
-        # Move head
+        #движения головы
         self.snakebody[0].x += self.direction[0]
         self.snakebody[0].y += self.direction[1]
         
@@ -180,7 +182,7 @@ class Food:
             self.x = random.randint(0, WIDTH // BLOCK - 1)
             self.y = random.randint(0, HEIGHT // BLOCK - 1)
             
-            # Проверяем, чтобы еда не появлялась на стенах
+            #проверяем, чтобы еда не появлялась на стенах
             valid_position = True
             for wall in self.walls.wall_list:
                 if wall.x == self.x and wall.y == self.y:
@@ -201,7 +203,6 @@ class Food:
         else:
             color = RED
 
-        # Квадратная еда вместо круглой
         pygame.draw.rect(SCREEN, color, 
                         (self.x * BLOCK, self.y * BLOCK, BLOCK, BLOCK))
 
@@ -219,7 +220,7 @@ class Walls:
         # Clear existing walls
         self.wall_list = []
         
-        # Border walls
+        #границы стены
         for x in range(0, WIDTH, BLOCK):
             self.wall_list.append(Point(x // BLOCK, 0))
             self.wall_list.append(Point(x // BLOCK, (HEIGHT - BLOCK) // BLOCK))
@@ -227,7 +228,7 @@ class Walls:
             self.wall_list.append(Point(0, y // BLOCK))
             self.wall_list.append(Point((WIDTH - BLOCK) // BLOCK, y // BLOCK))
         
-        # Level-specific walls
+        #добавляем стенки с каждым левелом
         if self.level >= 2:
             for x in range(5, 10):
                 self.wall_list.append(Point(x, 10))
@@ -247,14 +248,14 @@ class Walls:
                 return True
         return False
 
-# Show message on screen
+#сообщение на скрине
 def show_message(surface, msg, color, size=48, y_offset=0):
     font = pygame.font.SysFont("Verdana", size)
     text = font.render(msg, True, color)
     text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2 + y_offset))
     surface.blit(text, text_rect)
 
-# Pause game
+#пауза
 def pause_game(conn, user_id, level, score):
     save_score(conn, user_id, level, score)
     paused = True
@@ -339,7 +340,7 @@ def game_loop(conn, username):
     level = 1
     walls = Walls(level)
     snake = Snake()
-    food = Food(walls)  # Передаем стены для проверки позиции еды
+    food = Food(walls)  #передаем стены для проверки позиции еды
     speed = 5
     score = 0
     saved_length = 0
@@ -403,12 +404,12 @@ def game_loop(conn, username):
         if food.expired():
             food.respawn()
         
-        # Draw everything
+        #рисуем все
         walls.draw()
         food.draw()
         snake.draw()
         
-        # Display score and level
+        #очки и левел
         level_text = all_font.render(f"Level: {level}", True, WHITE)
         score_text = all_font.render(f"Score: {score}", True, WHITE)
         SCREEN.blit(level_text, (10, 10))
